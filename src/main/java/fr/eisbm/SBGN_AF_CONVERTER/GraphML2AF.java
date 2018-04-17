@@ -107,14 +107,17 @@ public class GraphML2AF {
 	public static void convert(String szInputFileName) {
 		GraphML2AF gs = new GraphML2AF();
 		String szOutSBGNFile = szInputFileName.replace(".graphml", "").concat(".sbgn");
-		gs.parseGraphMLFile(szInputFileName, szOutSBGNFile);
+		boolean bConversion = gs.parseGraphMLFile(szInputFileName, szOutSBGNFile);
 
-		String szSBGNv02File = szInputFileName.replace(".graphml", "").concat("-SBGNv02.sbgn");
-		// make a SBGN (v02) -valid file
-		gs.createSBGNv02File(szOutSBGNFile, szSBGNv02File);
+		if (bConversion) {
+			String szSBGNv02File = szInputFileName.replace(".graphml", "").concat("-SBGNv02.sbgn");
+			// make a SBGN (v02) -valid file
+			gs.createSBGNv02File(szOutSBGNFile, szSBGNv02File);
+		}
 	}
 
-	void parseGraphMLFile(String szInGraphMLFileName, String szOutSBGNFile) {
+	boolean parseGraphMLFile(String szInGraphMLFileName, String szOutSBGNFile) {
+		boolean bConversion = false;
 		try {
 			File inputFile = new File(szInGraphMLFileName);
 			DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -307,33 +310,32 @@ public class GraphML2AF {
 				if (nEdge.getNodeType() == Node.ELEMENT_NODE) {
 					Element eElement = (Element) nEdge;
 					String szArrowDirection = processNodeList(eElement.getElementsByTagName(FileUtils.Y_ARROWS));
-					String szProcessType = FileUtils.SBGN_NECESSARY_STIMULATION;
+					String szArcType = FileUtils.SBGN_EQUIVALENCE_ARC;
 					boolean bEdgeToBeCorrected = false;
 
 					if (szArrowDirection.contains("white_delta_bar")) {
-						szProcessType = FileUtils.SBGN_NECESSARY_STIMULATION;
+						szArcType = FileUtils.SBGN_NECESSARY_STIMULATION;
 						if (szArrowDirection.contains("source=\"white_delta_bar\"")) {
 							bEdgeToBeCorrected = true;
 						}
 					} else if (szArrowDirection.contains("white_diamond")) {
-						szProcessType = FileUtils.SBGN_UNKNOWN_INFLUENCE;
+						szArcType = FileUtils.SBGN_UNKNOWN_INFLUENCE;
 						if (szArrowDirection.contains("source=\"white_diamond\"")) {
 							bEdgeToBeCorrected = true;
 						}
 					} else if (szArrowDirection.contains("t_shape")) {
-						szProcessType = FileUtils.SBGN_NEGATIVE_INFLUENCE;
+						szArcType = FileUtils.SBGN_NEGATIVE_INFLUENCE;
 						if (szArrowDirection.contains("source=\"t_shape\"")) {
 							bEdgeToBeCorrected = true;
 						}
 					} else if (szArrowDirection.contains("white_delta")) {
-						szProcessType = FileUtils.SBGN_POSITIVE_INFLUENCE;
+						szArcType = FileUtils.SBGN_POSITIVE_INFLUENCE;
 						if (szArrowDirection.contains("source=\"white_delta\"")) {
 							bEdgeToBeCorrected = true;
 						}
-					} else {
-						System.out.println("The arc does not represent a SBGN AF-related process" + szArrowDirection);
 					}
-					_arc.setClazz(szProcessType);
+
+					_arc.setClazz(szArcType);
 
 					// get id of the edge/arc
 					String szArcAttributes = getElementAttributes(eElement).trim();
@@ -390,6 +392,18 @@ public class GraphML2AF {
 						}
 					}
 
+					if ((_arc.getSource() != null) && (_arc.getTarget() != null)) {
+
+						if (((Glyph) _arc.getSource()).getClazz().toUpperCase().equals("OR")
+								|| ((Glyph) _arc.getTarget()).getClazz().toUpperCase().equals("OR")
+								|| (((Glyph) _arc.getSource()).getClazz().toUpperCase().equals("AND")
+								|| ((Glyph) _arc.getTarget()).getClazz().toUpperCase().equals("AND"))
+								|| (((Glyph) _arc.getSource()).getClazz().toUpperCase().equals("NOT")
+								|| ((Glyph) _arc.getTarget()).getClazz().toUpperCase().equals("NOT"))) {
+							_arc.setClazz(FileUtils.SBGN_LOGIC_ARC);
+						}
+					}
+
 					String delimsCoord = "[\t]";
 					String szPathCoordinates = processNodeList(eElement.getElementsByTagName(FileUtils.Y_PATH));
 					szPathCoordinates = szPathCoordinates.replaceAll("\"", "");
@@ -398,12 +412,12 @@ public class GraphML2AF {
 						Start _start = new Start();
 						String szSX = tokensCoordinates[0].replaceAll("sx=", "");
 						_start.setX(Float.parseFloat(szSX) + fStartX + fStartW / 2);
-					//	 _start.setX(Float.parseFloat(szSX));
+						// _start.setX(Float.parseFloat(szSX));
 
 						// System.out.println(szSX+"\t"+fStartX+"\t"+_start.getX());
 						String szSY = tokensCoordinates[1].replaceAll("sy=", "");
 						_start.setY(Float.parseFloat(szSY) + fStartY + fStartH / 2);
-					//	 _start.setY(Float.parseFloat(szSY) );
+						// _start.setY(Float.parseFloat(szSY) );
 
 						_arc.setStart(_start);
 
@@ -413,7 +427,7 @@ public class GraphML2AF {
 						// _end.setX(Float.parseFloat(szTX));
 						String szTY = tokensCoordinates[3].replaceAll("ty=", "");
 						_end.setY(Float.parseFloat(szTY) + fTargetY + fTargetH / 2);
-					//	 _end.setY(Float.parseFloat(szTY));
+						// _end.setY(Float.parseFloat(szTY));
 						_arc.setEnd(_end);
 					}
 
@@ -562,9 +576,12 @@ public class GraphML2AF {
 
 			System.out.println(
 					"SBGN file validation: " + (SbgnUtil.isValid(outputFile) ? "validates" : "does not validate"));
+
+			bConversion = true;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		return bConversion;
 	}
 
 	private void findGlyphParent(String szParentGlyphId, Glyph _childGlyph, List<Glyph> _listOfGLyphs) {

@@ -64,9 +64,6 @@ public class SBGNML2GraphML {
 
 	private org.sbgn.bindings.Map map;
 
-	// map to hold information on arcs and corresponding ports
-	private java.util.Map<String, PortInformation> portMap = new HashMap<String, PortInformation>();
-
 	DirectedGraph<Glyph, Arc> graph;
 	Map<String, String> mColorMap = new HashMap<String, String>();
 	Map<String, GraphMLStyle> mGlyphStyleMap = new HashMap<String, GraphMLStyle>();
@@ -112,23 +109,9 @@ public class SBGNML2GraphML {
 
 				// we can get a list of arcs (edges) in this map with getArc()
 				for (Arc a : map.getArc()) {
-					Glyph source = null;
-					if (a.getSource() instanceof Port) {
-						source = findGlyph(((Port) a.getSource()).getId());
-						portMap.put(a.getId(), new PortInformation(((Port) a.getSource()).getId(),
-								((Port) a.getSource()).getX(), ((Port) a.getSource()).getY()));
-					} else {
-						source = findGlyph(((Glyph) a.getSource()).getId());
-					}
-					Glyph target = null;
-
-					if (a.getTarget() instanceof Port) {
-						target = findGlyph(((Port) a.getTarget()).getId());
-						portMap.put(a.getId(), new PortInformation(((Port) a.getTarget()).getId(),
-								((Port) a.getTarget()).getX(), ((Port) a.getTarget()).getY()));
-					} else {
-						target = findGlyph(((Glyph) a.getTarget()).getId());
-					}
+					Glyph source = findGlyph(((Glyph) a.getSource()).getId());
+					Glyph target = findGlyph(((Glyph) a.getTarget()).getId());
+					
 					if ((null != source) && (null != target)) {
 						graph.addEdge(source, target);
 					}
@@ -545,15 +528,6 @@ public class SBGNML2GraphML {
 					handler.endElement("", "", FileUtils.Y_POINT);
 				}
 			}
-			
-			// bend points for ports representation
-			if (portMap.containsKey(a.getId())) {
-				attr.clear();
-				attr.addAttribute("", "", "x", "CDATA", Float.toString((portMap.get(a.getId()).getX())));
-				attr.addAttribute("", "", "y", "CDATA", Float.toString((portMap.get(a.getId()).getY())));
-				handler.startElement("", "", FileUtils.Y_POINT, attr);
-				handler.endElement("", "", FileUtils.Y_POINT);
-			}
 			handler.endElement("", "", FileUtils.Y_PATH);
 
 			attr.clear();
@@ -577,8 +551,15 @@ public class SBGNML2GraphML {
 			} else if (a.getClazz().equals(FileUtils.SBGN_POSITIVE_INFLUENCE)) {
 				attr.addAttribute("", "", "source", "CDATA", "none");
 				attr.addAttribute("", "", "target", "CDATA", "white_delta");
-			} else {
+			} else if (a.getClazz().equals(FileUtils.SBGN_LOGIC_ARC))
+			{
+				attr.addAttribute("", "", "source", "CDATA", "none");
+				attr.addAttribute("", "", "target", "CDATA", "none");
+			}
+			else{
 				System.out.println(a.getClazz());
+				attr.addAttribute("", "", "source", "CDATA", "none");
+				attr.addAttribute("", "", "target", "CDATA", "none");
 			}
 
 			handler.startElement("", "", FileUtils.Y_ARROWS, attr);

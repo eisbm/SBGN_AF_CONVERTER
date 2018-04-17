@@ -65,8 +65,6 @@ public class FileUtils {
 	public static final String SBGN_LOGIC_ARC = "logic arc";
 	public static final String SBGN_EQUIVALENCE_ARC = "equivalence arc";
 
-
-	
 	public static final String Y_SMART_NODE_LABEL_MODEL_PARAMETER = "y:SmartNodeLabelModelParameter";
 	public static final String Y_MODEL_PARAMETER = "y:ModelParameter";
 	public static final String Y_SMART_NODE_LABEL_MODEL = "y:SmartNodeLabelModel";
@@ -99,12 +97,11 @@ public class FileUtils {
 	public static final String Y_SHAPE_NODE = "y:ShapeNode";
 	
 	public static final String IN_SBGN_ED_FILE = "asthma_map_sbgn_grapml/1abc.sbgn";
-	public static final String OUT_YED_FILE = "asthma_map_sbgn_grapml/Treg_v2.graphml";
+	public static final String OUT_YED_FILE = "af/test.graphml";
 	public static final String OUT_SBGN_ED_FILE = "asthma_map_sbgn_grapml/newt/Treg_v2.sbgn";
 	public static final String OUT_SBGN_ED_VANTED_FILE = "asthma_map_sbgn_grapml/sbgn_valid/Treg_v2_VANTED.sbgn";
 
 	public static final int DEFAULT_FONT_SIZE = 10;
-	
 	
 	public static Sbgn readFromFile(String szFileName) throws JAXBException {
 		Sbgn result = null;

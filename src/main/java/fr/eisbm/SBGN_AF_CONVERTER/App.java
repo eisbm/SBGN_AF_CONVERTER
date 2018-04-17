@@ -17,6 +17,7 @@ import java.awt.Component;
 import java.io.*;
 
 public class App extends Application {
+	
 
 	/**
 	 * This enum describes the 2 possible directions of convertion.
@@ -35,9 +36,13 @@ public class App extends Application {
 			throw new IllegalArgumentException("No valid enum was given");
 		}
 	}
+	
+	String szFolderName = "";
 
+	@SuppressWarnings({ "restriction", "rawtypes" })
 	@Override
 	public void start(Stage primaryStage) {
+
 		primaryStage.setTitle("GraphML <-> SBGN-ML");
 
 		VBox vbox = new VBox(10);
@@ -68,71 +73,17 @@ public class App extends Application {
 		FileChooser inputFileChooser = new FileChooser();
 
 		Button inputFileOpenButton = new Button("Choose file");
+		
 		grid.add(inputFileOpenButton, 2, 1);
+		
 		inputFileOpenButton.setOnAction(e -> {
 			File file = inputFileChooser.showOpenDialog(primaryStage);
 			if (file != null) {
 				inputFileText.setText(file.getAbsolutePath());
+				szFolderName = file.getParentFile().getAbsolutePath();
 			}
-		});
-
-		// --- 2nd row --- //
-	/*	Label outputFileLabel = new Label("Output File:");
-		grid.add(outputFileLabel, 0, 2);
-
-		TextField outputFileText = new TextField();
-		grid.add(outputFileText, 1, 2);
-
-		FileChooser outputFileChooser = new FileChooser();
-
-		Button outputFileOpenButton = new Button("Save to");
-		grid.add(outputFileOpenButton, 2, 2);
-		outputFileOpenButton.setOnAction(e -> {
-			File file = outputFileChooser.showSaveDialog(primaryStage);
-
-			if (file != null) {
-
-				String szOutExtension = ".sbgn";
-				if (directionChoice.getValue().equals(ConvertionChoice.SBGN2GRAPHML.toString())) {
-					szOutExtension = ".graphml";
-				}
-				String szFilePath = file.getAbsolutePath();
-				if (!szFilePath.contains(szOutExtension)) {
-					szFilePath = szFilePath.concat(szOutExtension);
-				}
-				outputFileText.setText(szFilePath);
-			}
-		});
-
-		// --- 3rd row --- //
-	//	Label logFileLabel = new Label("Log file:");
-	//	grid.add(logFileLabel, 0, 3);
-
-	//	TextField logFileText = new TextField();
-	//	grid.add(logFileText, 1, 3);
-
-	//	FileChooser logFileChooser = new FileChooser();
-
-	//	Button logFileOpenButton = new Button("Save log to");
-	/*	grid.add(logFileOpenButton, 2, 3);
-		logFileOpenButton.setOnAction(e -> {
 			
-			String extension = "";
-
-			File file = logFileChooser.showSaveDialog(primaryStage);
-			String szFileName = file.getAbsolutePath();
-			if((!szFileName.contains(".log")) || (!szFileName.contains(".txt")))
-					{
-				
-					}szFileName = szFileName.concat(".log");
-			
-			if (file != null) {
-				logFileText.setText(file.getAbsolutePath());
-				
-			}
-		});*/
-		
-		
+		});
 
 		// --- final row --- //
 		final Label infoLabel = new Label();
@@ -159,6 +110,11 @@ public class App extends Application {
 						
 						Platform.runLater(() -> {
 							infoLabel.setText("Done");
+							Alert alert = new Alert(Alert.AlertType.INFORMATION);
+							alert.setTitle("The output folder");
+							alert.setHeaderText("The output is available in the following folder: ");
+							alert.setContentText(szFolderName);
+							alert.show();
 						});
 						return null;
 					}
@@ -192,33 +148,14 @@ public class App extends Application {
 		Button closeButton = new Button("Close");
 		grid.add(closeButton, 2, 4, 3, 1);
 
-		// grid.add(convertButton, 1, 4, 3,1);
-
 		closeButton.setOnAction(e -> {
 
-			/*
-			 * if (JOptionPane.showInternalConfirmDialog(grid,
-			 * "Are you sure to close this window?", "Really Closing?",
-			 * JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE) ==
-			 * JOptionPane.YES_OPTION){ System.exit(0); }
-			 */
 			System.exit(0);
 
 		});
 
 		// info row
 		grid.add(infoLabel, 1, 5);
-
-		// --- console --- //
-		/*
-		 * does not work properly, makes the gui freeze
-		 */
-		/*
-		 * TextArea console = new TextArea(); console.setEditable(false);
-		 * vbox.getChildren().add(console); PrintStream printStream = new
-		 * PrintStream(new TextOutputStream(console)); System.setOut(printStream);
-		 * System.setErr(printStream);
-		 */
 
 		Scene scene = new Scene(vbox, 800, 400);
 		primaryStage.setScene(scene);
