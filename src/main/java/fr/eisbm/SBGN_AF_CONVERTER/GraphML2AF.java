@@ -25,7 +25,6 @@ import org.sbgn.bindings.Glyph.Clone;
 import org.sbgn.bindings.Glyph.Entity;
 import org.sbgn.bindings.Label;
 import org.sbgn.bindings.Map;
-import org.sbgn.bindings.Port;
 import org.sbgn.bindings.SBGNBase.Extension;
 import org.sbgn.bindings.SBGNBase.Notes;
 import org.sbgn.bindings.Sbgn;
@@ -332,7 +331,7 @@ public class GraphML2AF {
 							bEdgeToBeCorrected = true;
 						}
 					} else {
-						System.out.println(szArrowDirection);
+						System.out.println("The arc does not represent a SBGN AF-related process" + szArrowDirection);
 					}
 					_arc.setClazz(szProcessType);
 
@@ -391,20 +390,20 @@ public class GraphML2AF {
 						}
 					}
 
-					String szPathCoordinates = processNodeList(eElement.getElementsByTagName(FileUtils.Y_PATH));
 					String delimsCoord = "[\t]";
+					String szPathCoordinates = processNodeList(eElement.getElementsByTagName(FileUtils.Y_PATH));
 					szPathCoordinates = szPathCoordinates.replaceAll("\"", "");
 					String[] tokensCoordinates = szPathCoordinates.split(delimsCoord);
 					if (tokensCoordinates.length == 4) {
 						Start _start = new Start();
 						String szSX = tokensCoordinates[0].replaceAll("sx=", "");
 						_start.setX(Float.parseFloat(szSX) + fStartX + fStartW / 2);
-						// _start.setX(Float.parseFloat(szSX));
+					//	 _start.setX(Float.parseFloat(szSX));
 
 						// System.out.println(szSX+"\t"+fStartX+"\t"+_start.getX());
 						String szSY = tokensCoordinates[1].replaceAll("sy=", "");
 						_start.setY(Float.parseFloat(szSY) + fStartY + fStartH / 2);
-						// _start.setY(Float.parseFloat(szSY) );
+					//	 _start.setY(Float.parseFloat(szSY) );
 
 						_arc.setStart(_start);
 
@@ -414,52 +413,30 @@ public class GraphML2AF {
 						// _end.setX(Float.parseFloat(szTX));
 						String szTY = tokensCoordinates[3].replaceAll("ty=", "");
 						_end.setY(Float.parseFloat(szTY) + fTargetY + fTargetH / 2);
-						// _end.setY(Float.parseFloat(szTY));
+					//	 _end.setY(Float.parseFloat(szTY));
 						_arc.setEnd(_end);
 					}
 
 					String szPointInfo = processNodeList(eElement.getElementsByTagName(FileUtils.Y_POINT));
 					if (!szPointInfo.isEmpty()) {
-						String szPortXCoord = "", szPortYCoord = "";
+						String szPointXCoord = "", szPointYCoord = "";
 						szPointInfo = szPointInfo.replaceAll("\"", "");
 						String[] tokensPort = szPointInfo.split(delims);
 
 						for (int i = 0; i < tokensPort.length - 1; i += 2) {
 							if (tokensPort[i].contains("x=")) {
-								szPortXCoord = tokensPort[i].replaceAll("x=", "");
+								szPointXCoord = tokensPort[i].replaceAll("x=", "");
 							}
 							if (tokensPort[i + 1].contains("y=")) {
-								szPortYCoord = tokensPort[i + 1].replaceAll("y=", "");
+								szPointYCoord = tokensPort[i + 1].replaceAll("y=", "");
 							}
 
 							Next _next = new Next();
-							_next.setX(Float.parseFloat(szPortXCoord));
-							_next.setY(Float.parseFloat(szPortYCoord));
-							// _arc.getNext().add(_next);
+							_next.setX(Float.parseFloat(szPointXCoord));
+							_next.setY(Float.parseFloat(szPointYCoord));
+							_arc.getNext().add(_next);
 						}
 					}
-
-					/*
-					 * if (!szPointInfo.isEmpty()) { String szPortXCoord = "", szPortYCoord = "";
-					 * szPointInfo = szPointInfo.replaceAll("\"", ""); String[] tokensPort =
-					 * szPointInfo.split(delims);
-					 * 
-					 * for (int i = 0; i < tokensPort.length - 1; i += 2) { if
-					 * (tokensPort[i].contains("x=")) { szPortXCoord =
-					 * tokensPort[i].replaceAll("x=", ""); } if (tokensPort[i + 1].contains("y=")) {
-					 * szPortYCoord = tokensPort[i + 1].replaceAll("y=", ""); }
-					 * 
-					 * Port _port = new Port(); _port.setX(Float.parseFloat(szPortXCoord));
-					 * _port.setY(Float.parseFloat(szPortYCoord));
-					 * 
-					 * if ((_arc.getSource() != null) && (_arc.getTarget() != null)) { if
-					 * (isProcessType((Glyph) _arc.getSource())) { setPortInfo(((Glyph)
-					 * _arc.getSource()), _port); _arc.setSource(_port); } else if
-					 * (isProcessType((Glyph) _arc.getTarget())) { setPortInfo(((Glyph)
-					 * _arc.getTarget()), _port); _arc.setTarget(_port); } }
-					 * 
-					 * } }
-					 */
 
 					NodeList nlLineStyle = eElement.getElementsByTagName(FileUtils.Y_LINE_STYLE);
 					// getting the border color info
@@ -481,7 +458,7 @@ public class GraphML2AF {
 						String szCardinality = nlCardinalityList.item(0).getTextContent().trim();
 						if (!szCardinality.equals("")) {
 							Glyph cardGlyph = new Glyph();
-							cardGlyph.setClazz("cardinality");
+							cardGlyph.setClazz(FileUtils.SBGN_CARDINALITY);
 							Label _label = new Label();
 							_label.setText(szCardinality);
 							cardGlyph.setLabel(_label);
@@ -718,10 +695,9 @@ public class GraphML2AF {
 
 			// parse notes information
 
-			/*
-			 * if (_element.getAttribute(KEY_TAG).equals(szNotesTagId)) {
-			 * _glyph.setNotes(getSBGNNotes(_element)); }
-			 */
+			if (_element.getAttribute(KEY_TAG).equals(szNotesTagId)) {
+				_glyph.setNotes(getSBGNNotes(_element));
+			}
 
 			// parse annotation information
 			if (_element.getAttribute(KEY_TAG).equals(szAnnotationTagId)) {
@@ -921,28 +897,6 @@ public class GraphML2AF {
 		ext.getAny().add(eltRenderInfo);
 
 		map.setExtension(ext);
-	}
-
-	private void setPortInfo(Glyph glyph, Port port) {
-		for (Glyph g : map.getGlyph()) {
-			if (g.getId().equals(glyph.getId())) {
-				int iPortNo = glyph.getPort().size();
-				boolean bFoundPort = false;
-				for (int i = 0; i < iPortNo; i++) {
-					if ((glyph.getPort().get(i).getX() == port.getX())
-							&& (glyph.getPort().get(i).getY() == port.getY())) {
-						bFoundPort = true;
-						port.setId(glyph.getPort().get(i).getId());
-						break;
-					}
-				}
-				if (!bFoundPort) {
-					port.setId(glyph.getId() + "." + (iPortNo + 1));
-					glyph.getPort().add(port);
-				}
-				break;
-			}
-		}
 	}
 
 	private String parseYedNodeType(String szType) {
