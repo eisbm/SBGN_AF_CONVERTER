@@ -11,13 +11,15 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
 import java.awt.Component;
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class App extends Application {
-	
 
 	/**
 	 * This enum describes the 2 possible directions of convertion.
@@ -36,8 +38,10 @@ public class App extends Application {
 			throw new IllegalArgumentException("No valid enum was given");
 		}
 	}
-	
+
 	String szFolderName = "";
+	boolean bSingleFileOption = true;
+	List<String> results = new ArrayList<String>();
 
 	@SuppressWarnings({ "restriction", "rawtypes" })
 	@Override
@@ -69,20 +73,61 @@ public class App extends Application {
 
 		TextField inputFileText = new TextField();
 		grid.add(inputFileText, 1, 1);
+		TextField inputFolderText = new TextField();
 
 		FileChooser inputFileChooser = new FileChooser();
 
 		Button inputFileOpenButton = new Button("Choose file");
-		
+
 		grid.add(inputFileOpenButton, 2, 1);
-		
+
 		inputFileOpenButton.setOnAction(e -> {
 			File file = inputFileChooser.showOpenDialog(primaryStage);
 			if (file != null) {
+				inputFileText.setDisable(false);
 				inputFileText.setText(file.getAbsolutePath());
 				szFolderName = file.getParentFile().getAbsolutePath();
+				inputFolderText.setText("");
+				inputFolderText.setDisable(true);
+				bSingleFileOption = true;
 			}
-			
+
+		});
+
+		// --- 1st row --- //
+		Label inputFolderLabel = new Label("Input Folder:");
+		grid.add(inputFolderLabel, 0, 2);
+
+		grid.add(inputFolderText, 1, 2);
+
+		Button inputFolderOpenButton = new Button("Choose folder");
+
+		grid.add(inputFolderOpenButton, 2, 2);
+
+		DirectoryChooser inputFolderChooser = new DirectoryChooser();
+		inputFolderChooser.setTitle("Open Resource File");
+
+		inputFolderOpenButton.setOnAction(e -> {
+
+			File folder = inputFolderChooser.showDialog(primaryStage);
+			if (folder != null) {
+				inputFolderText.setDisable(false);
+				inputFolderText.setText(folder.getAbsolutePath());
+				szFolderName = folder.getAbsolutePath();
+
+				File[] files = folder.listFiles();
+
+				for (File file : files) {
+					if (file.isFile()) {
+						results.add(file.getAbsolutePath());
+					}
+				}
+
+				inputFileText.setText("");
+				inputFileText.setDisable(true);
+				bSingleFileOption = false;
+			}
+
 		});
 
 		// --- final row --- //
@@ -92,7 +137,7 @@ public class App extends Application {
 		convertButton.setOnAction(e -> {
 
 			// check arguments
-			if (inputFileText.getText().isEmpty()) {
+			if (inputFileText.getText().isEmpty() && inputFolderText.getText().isEmpty()) {
 				infoLabel.setText("No input provided.");
 				return;
 			}
@@ -105,9 +150,17 @@ public class App extends Application {
 						Platform.runLater(() -> {
 							infoLabel.setText("Running...");
 						});
-						GraphML2AF.convert(inputFileText.getText());
-						
-						
+
+						if (bSingleFileOption) {
+							GraphML2AF.convert(inputFileText.getText());
+						} else {
+							for (String fileName : results) {
+								if (fileName.contains(".graphml")) {
+									GraphML2AF.convert(fileName);
+								}
+							}
+						}
+
 						Platform.runLater(() -> {
 							infoLabel.setText("Done");
 							Alert alert = new Alert(Alert.AlertType.INFORMATION);
@@ -129,10 +182,24 @@ public class App extends Application {
 						Platform.runLater(() -> {
 							infoLabel.setText("Running...");
 						});
-						SBGNML2GraphML.convert(inputFileText.getText());
-						
+
+						if (bSingleFileOption) {
+							SBGNML2GraphML.convert(inputFileText.getText());
+						} else {
+							for (String fileName : results) {
+								if ((fileName.contains(".sbgn") || fileName.contains(".xml"))) {
+									SBGNML2GraphML.convert(fileName);
+								}
+							}
+						}
+
 						Platform.runLater(() -> {
 							infoLabel.setText("Done");
+							Alert alert = new Alert(Alert.AlertType.INFORMATION);
+							alert.setTitle("The output folder");
+							alert.setHeaderText("The output is available in the following folder: ");
+							alert.setContentText(szFolderName);
+							alert.show();
 						});
 						return null;
 					}
