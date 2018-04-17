@@ -80,7 +80,7 @@ public class SBGNML2GraphML {
 
 	public static void convert(String szInputFileName) {
 		SBGNML2GraphML sg = new SBGNML2GraphML();
-		
+
 		String szOutFileName = szInputFileName.substring(0, szInputFileName.indexOf(".")).concat(".graphml");
 		System.out.println(szOutFileName);
 		sg.parseSBGNFile(szInputFileName, szOutFileName);
@@ -111,7 +111,7 @@ public class SBGNML2GraphML {
 				for (Arc a : map.getArc()) {
 					Glyph source = findGlyph(((Glyph) a.getSource()).getId());
 					Glyph target = findGlyph(((Glyph) a.getTarget()).getId());
-					
+
 					if ((null != source) && (null != target)) {
 						graph.addEdge(source, target);
 					}
@@ -517,7 +517,7 @@ public class SBGNML2GraphML {
 			attr.addAttribute("", "", "sy", "CDATA", Float.toString(sy));
 			attr.addAttribute("", "", "tx", "CDATA", Float.toString(tx));
 			attr.addAttribute("", "", "ty", "CDATA", Float.toString(ty));
-	
+
 			handler.startElement("", "", FileUtils.Y_PATH, attr);
 			if (a.getNext() != null) {
 				for (Next _next : a.getNext()) {
@@ -551,12 +551,10 @@ public class SBGNML2GraphML {
 			} else if (a.getClazz().equals(FileUtils.SBGN_POSITIVE_INFLUENCE)) {
 				attr.addAttribute("", "", "source", "CDATA", "none");
 				attr.addAttribute("", "", "target", "CDATA", "white_delta");
-			} else if (a.getClazz().equals(FileUtils.SBGN_LOGIC_ARC))
-			{
+			} else if (a.getClazz().equals(FileUtils.SBGN_LOGIC_ARC)) {
 				attr.addAttribute("", "", "source", "CDATA", "none");
 				attr.addAttribute("", "", "target", "CDATA", "none");
-			}
-			else{
+			} else {
 				System.out.println(a.getClazz());
 				attr.addAttribute("", "", "source", "CDATA", "none");
 				attr.addAttribute("", "", "target", "CDATA", "none");
@@ -703,7 +701,6 @@ public class SBGNML2GraphML {
 		else if (g.getClazz().equals(FileUtils.SBGN_SOURCE_AND_SINK)) {
 			parseSBGNSourceAndSink(handler, g);
 		}
-		
 
 		handler.endElement("", "", "node");
 		visitedGlyphSet.add(g.getId());
