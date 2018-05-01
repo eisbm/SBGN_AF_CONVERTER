@@ -1,13 +1,8 @@
 package fr.eisbm.SBGN_AF_CONVERTER;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Reader;
-import java.io.StringReader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,11 +10,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
@@ -29,12 +21,10 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DefaultDirectedGraph;
-import org.sbgn.SbgnUtil;
 import org.sbgn.bindings.Arc;
 import org.sbgn.bindings.Arc.Next;
 import org.sbgn.bindings.Glyph;
 import org.sbgn.bindings.Glyph.Clone;
-import org.sbgn.bindings.Port;
 import org.sbgn.bindings.SBGNBase.Extension;
 import org.sbgn.bindings.SBGNBase.Notes;
 import org.sbgn.bindings.Sbgn;
@@ -109,8 +99,8 @@ public class SBGNML2GraphML {
 
 				// we can get a list of arcs (edges) in this map with getArc()
 				for (Arc a : map.getArc()) {
-					Glyph source = findGlyph(((Glyph) a.getSource()).getId());
-					Glyph target = findGlyph(((Glyph) a.getTarget()).getId());
+					Glyph source = (Glyph) a.getSource();
+					Glyph target = (Glyph) a.getTarget();
 
 					if ((null != source) && (null != target)) {
 						graph.addEdge(source, target);
@@ -463,28 +453,10 @@ public class SBGNML2GraphML {
 	}
 
 	private void parseArc(TransformerHandler handler, Arc a) throws SAXException {
-
-		Glyph source;
-		Glyph target;
-		boolean bTag = false;
-
-		if (a.getSource() instanceof Port) {
-			source = findNode(((Port) a.getSource()).getId());
-		} else {
-			source = findNode(((Glyph) a.getSource()).getId());
-		}
-
-		if (a.getTarget() instanceof Port) {
-			target = findNode(((Port) a.getTarget()).getId());
-		} else {
-			target = findNode(((Glyph) a.getTarget()).getId());
-		}
+		Glyph source = findNode(((Glyph) a.getSource()).getId());
+		Glyph target = findNode(((Glyph) a.getTarget()).getId());
 
 		if ((null != source) && (null != target)) {
-
-			if ((source.getClazz().equals(FileUtils.SBGN_TAG)) || (target.getClazz().equals(FileUtils.SBGN_TAG))) {
-				bTag = true;
-			}
 			// <edge>
 			AttributesImpl attr = new AttributesImpl();
 			attr.clear();
@@ -1598,31 +1570,10 @@ public class SBGNML2GraphML {
 		handler.endElement("", "", "data");
 	}
 
-	private Glyph findGlyph(String id) {
-		for (Glyph g : map.getGlyph()) {
-			if (g.getId().equals(id)) {
-				return g;
-			} else {
-				for (Port p : g.getPort()) {
-					if (p.getId().equals(id)) {
-						return g;
-					}
-				}
-			}
-		}
-		return null;
-	}
-
 	private Glyph findNode(String id) {
 		for (Glyph g : graph.vertexSet()) {
 			if (g.getId().equals(id)) {
 				return g;
-			} else {
-				for (Port p : g.getPort()) {
-					if (p.getId().equals(id)) {
-						return g;
-					}
-				}
 			}
 		}
 
